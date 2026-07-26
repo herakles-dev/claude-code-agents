@@ -1,0 +1,260 @@
+<!--
+  guidance: This is a template for a project-level CLAUDE.md — the file Claude Code
+  reads automatically at the start of every session in this repo. Its job is narrow:
+  give an agent (yours or a teammate's) just enough durable context to act correctly
+  on the FIRST message, without re-deriving it from the codebase every time.
+
+  A good CLAUDE.md is short, current, and enforceable. It is not a wiki, not an
+  architecture doc, and not a place to paste your onboarding README. If a fact needs
+  more than a table row or two to explain, it belongs in docs/ and gets linked, not
+  inlined here. Every section below exists because a specific failure mode showed up
+  in practice without it — the guidance comments explain which one. Delete any
+  section that doesn't earn its place in your project; a CLAUDE.md nobody reads
+  because it's 800 lines long is worse than no CLAUDE.md at all.
+
+  Replace every {{PLACEHOLDER}}. Delete every guidance comment once you understand
+  it — they're here to teach, not to ship.
+-->
+
+# {{PROJECT_NAME}}
+
+> {{ONE_LINE_PROJECT_DESCRIPTION}}
+
+<!--
+  guidance: One line, not a paragraph. If you need three sentences to say what this
+  project is, that's a sign the project needs splitting, not that the description
+  needs to be longer.
+-->
+
+---
+
+## Tasks Are the Source of Truth
+
+<!--
+  guidance: This is the single most load-bearing idea in the whole file. Chat history
+  is not durable — it gets summarized, truncated, or lost across context resets and
+  across sessions. If "what's done, what's next, and who's doing it" only lives in
+  the conversation, every new session (or every agent you spawn) starts from a guess.
+
+  A task list (a TODO tool, an issue tracker, a tasks.json, whatever your tooling
+  provides) is durable and inspectable independent of any one conversation. Treat it
+  as the ONE place that answers "what is the current state of this project" — richer
+  than a memory summary, and it doesn't drift the way prose notes do.
+-->
+
+- Before starting any work, check the current task list. Don't start from what the
+  conversation *implies* is next — start from what the task list *says* is next.
+- Before modifying files, mark the task you're working on as in-progress. This is
+  what lets a second agent (or a second session of you) see that it's claimed.
+- After finishing, mark it done — including a short note on what actually changed,
+  not just "done." Future-you and other agents rely on that note more than the diff.
+- If work doesn't map to an existing task, create one before you start. Undocumented
+  work is invisible work — it didn't happen, as far as the next session is concerned.
+
+---
+
+## Core Rules
+
+<!--
+  guidance: Keep this list short — five to ten items, not fifty. It should contain
+  only rules where getting it wrong is expensive (broken prod, leaked secret,
+  clobbered teammate's work), not general good-practice advice an agent already
+  knows. If everything is a rule, nothing is.
+-->
+
+**ALWAYS**:
+- Read a file before editing it. Don't guess at existing content or structure.
+- Load required credentials/config before running commands that need them
+  (`{{SECRETS_LOAD_COMMAND}}`) — see "Secrets Discipline" below.
+- Check the task list before starting work, and update it as you go (see above).
+- Ask for explicit approval before medium/high-risk actions (see "Risk Tiers" below).
+
+**NEVER**:
+- Modify files without a claimed, in-progress task backing the change.
+- Hardcode credentials, tokens, or secrets in source, config, or commit messages.
+- Create documentation files nobody asked for. Write code; don't narrate it.
+- Skip a verification step because the change "should" work — check that it did.
+- Use destructive commands (force-push, hard reset, recursive delete) without
+  explicit approval, even if you're confident.
+
+---
+
+## Tech Stack
+
+<!--
+  guidance: This table exists so an agent doesn't have to open five config files to
+  figure out what it's even working with. Keep it to facts that change rarely —
+  language, framework, database, deploy target. If a row would go stale every month,
+  it doesn't belong here; put it somewhere closer to the code it describes.
+-->
+
+| Component | Technology |
+|---|---|
+| **{{LAYER_1_NAME}}** (e.g. Backend) | {{TECHNOLOGY_1}} |
+| **{{LAYER_2_NAME}}** (e.g. Frontend) | {{TECHNOLOGY_2}} |
+| **{{LAYER_3_NAME}}** (e.g. Database) | {{TECHNOLOGY_3}} |
+| **{{LAYER_4_NAME}}** (e.g. Deployment) | {{TECHNOLOGY_4}} |
+
+---
+
+## Project Structure
+
+<!--
+  guidance: A directory tree here saves an agent an early exploratory pass through
+  the repo. Annotate only the directories/files whose PURPOSE isn't obvious from
+  their name — don't just dump `tree` output. Update this when the structure
+  actually changes; a stale tree is worse than none, because it actively misleads.
+-->
+
+```
+{{PROJECT_NAME}}/
+├── {{SOURCE_DIR}}/           # {{WHAT_LIVES_HERE}}
+├── {{TEST_DIR}}/             # {{WHAT_LIVES_HERE}}
+├── {{CONFIG_DIR}}/           # {{WHAT_LIVES_HERE}}
+├── docs/current/             # Active, maintained documentation (see below)
+└── CLAUDE.md                 # This file
+```
+
+---
+
+## Risk & Autonomy Tiers
+
+<!--
+  guidance: Not every action deserves the same level of caution, and treating them
+  identically produces one of two failure modes: an agent that stops to ask
+  permission for a trivial read-only check (annoying, erodes trust in the process),
+  or one that silently does something expensive/destructive because "it seemed
+  low-risk" (dangerous). A tiered table gives a fast, consistent answer to "do I
+  need to stop and ask" without requiring judgment calls every time.
+
+  Calibrate the examples to what's actually expensive to undo in YOUR project — a
+  schema migration is high-risk somewhere with real user data and low-risk in a
+  greenfield prototype. The tiers are the point; the examples are just a starting
+  guess.
+-->
+
+| Tier | Examples | Required action |
+|---|---|---|
+| **Low** | Reading files, running tests, checking status/logs | Proceed without asking |
+| **Medium** | Editing config, restarting a service, non-destructive refactors | State the plan, get explicit approval, then proceed |
+| **High** | Schema/data changes, deploying to production, changing access control | Explicit approval required, plus a verification step after |
+| **Critical** | Deleting data, rotating/revoking credentials, anything hard to undo | Explicit approval + a stated rollback plan before starting |
+
+---
+
+## Agent Routing
+
+<!--
+  guidance: This section only applies if you're running more than one specialized
+  agent (a multi-agent / sub-agent setup) rather than a single general-purpose
+  Claude Code session. If you're not doing that yet, delete this section — add it
+  back when you are.
+
+  The problem it solves: as an agent fleet grows, "which agent handles this kind of
+  task" stops being obvious, and without a routing table, work either goes to a
+  general-purpose agent that does a mediocre job at something specialized, or
+  everyone just guesses. A routing table makes the assignment mechanical and
+  auditable instead of a fresh judgment call every time.
+-->
+
+| Task type | Agent | Notes |
+|---|---|---|
+| {{TASK_TYPE_1}} (e.g. backend API work) | `{{AGENT_1}}` | {{WHEN_TO_USE}} |
+| {{TASK_TYPE_2}} (e.g. security review) | `{{AGENT_2}}` | {{WHEN_TO_USE}} |
+| {{TASK_TYPE_3}} (e.g. test coverage) | `{{AGENT_3}}` | {{WHEN_TO_USE}} |
+| Anything that doesn't clearly fit above | `{{GENERAL_PURPOSE_AGENT}}` | Default fallback — don't force a specialist fit that isn't there |
+
+Assign the agent when the task is created, not after work has started. If a task
+turns out to need a different specialist than assigned, reassign it explicitly and
+say why — don't just have the wrong agent push through anyway.
+
+---
+
+## Hook Enforcement
+
+<!--
+  guidance: A rule that only lives in this file is a rule an agent can miss, forget
+  mid-task, or (for a less careful model) rationalize around under time pressure.
+  Hooks are how you make a rule mechanical instead of aspirational: a pre-tool-use
+  hook can block a write outside an in-progress task; a pre-commit hook can block a
+  commit containing a secret pattern regardless of what any agent "meant" to do.
+
+  Not everything needs to be a hook — plenty of rules are fine as prose guidance
+  that a careful agent follows. Reserve hooks for the rules where a MISS is
+  expensive: secrets leaking, destructive commands running unreviewed, writes
+  happening with no task backing them. If you don't have hook infrastructure yet,
+  keep this section as a statement of intent and revisit once you do.
+-->
+
+This project enforces the rules above with hooks, not just documentation, where the
+cost of a miss is high:
+
+| Hook | Enforces |
+|---|---|
+| {{HOOK_1_NAME}} | {{WHAT_IT_BLOCKS_OR_CHECKS}} |
+| {{HOOK_2_NAME}} | {{WHAT_IT_BLOCKS_OR_CHECKS}} |
+
+Hooks are the backstop, not the first line of defense — read this file and follow it
+directly; don't rely on a hook to catch what good judgment should have caught first.
+
+---
+
+## Secrets Discipline
+
+<!--
+  guidance: State this explicitly rather than assuming it's obvious. "Never hardcode
+  secrets" is easy to agree with in the abstract and easy to violate in a rush —
+  pasting a token into a one-off script "just to test something," or logging a full
+  request object that happens to contain an Authorization header. Naming the actual
+  mechanism (where secrets live, how they're loaded) turns the rule from a vague
+  value into a specific, checkable habit.
+-->
+
+- Secrets live in `{{SECRETS_LOCATION}}` (e.g. an untracked `.env`, a secrets
+  manager, a vault) — never in source, never in commit history, never in a config
+  file that gets checked in.
+- Load them via `{{SECRETS_LOAD_COMMAND}}` before running anything that needs them.
+- If a secret ever lands in a diff, a log, or a commit — even briefly, even in a
+  branch that gets reverted — treat it as compromised and rotate it. "I removed it
+  in the next commit" does not undo the exposure.
+
+---
+
+## Session Flow
+
+<!--
+  guidance: This closes the loop back to "Tasks Are the Source of Truth" with a
+  concrete, repeatable sequence. New contributors (human or agent) benefit from
+  seeing the whole lifecycle in one place rather than assembling it from the rules
+  scattered above.
+-->
+
+```
+Check task list → claim next task (mark in-progress) → do the work →
+verify it actually works → mark task complete with a note on what changed
+```
+
+For anything bigger than a single task, break it into a task list before writing
+any code — a plan reviewed before execution is cheap to correct; code written
+against the wrong plan is not.
+
+---
+
+## Documentation
+
+<!--
+  guidance: Point to detailed docs rather than inlining them. This keeps CLAUDE.md
+  itself short (see the opening guidance note) while still making deeper material
+  discoverable. Only list docs that are actually current — a link to a stale doc is
+  worse than no link, because it gets trusted by default.
+-->
+
+| Document | Purpose |
+|---|---|
+| `docs/current/{{ARCHITECTURE_DOC}}` | System architecture and data flow |
+| `docs/current/{{DEVELOPMENT_DOC}}` | Local dev setup and workflows |
+| `{{OTHER_DOC}}` | {{PURPOSE}} |
+
+---
+
+**Last updated:** {{DATE}} · **Status:** {{PROJECT_STATUS}}
