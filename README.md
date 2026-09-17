@@ -8,13 +8,13 @@ Pull the package folder you need and drop its `.md` files into your own project.
 
 | Package | Agents | Purpose |
 |---|---|---|
-| [`orchestration/`](orchestration/) | 13 | Building, routing, and running other agents, plus a general-purpose nine-stage spec-driven development pipeline (plan → architect → implement → integrate → test → review → security → optimize → recover). |
-| [`engineering/`](engineering/) | 6 | General-purpose software engineering: backend, frontend, database, TypeScript, testing, code quality. |
+| [`orchestration/`](orchestration/) | 16 | Building, routing, and running other agents, plus a general-purpose nine-stage spec-driven development pipeline (plan → architect → implement → integrate → test → review → security → optimize → recover), plus a wave-level + per-task adversarial review/fix trio. |
+| [`engineering/`](engineering/) | 7 | General-purpose software engineering: backend, frontend, database, TypeScript, testing, code quality, documentation. |
 | [`security/`](security/) | 6 | Application security, privacy compliance, and bug-bounty report writing. |
 | [`devops/`](devops/) | 5 | CI/CD, containers, nginx, log analysis, site reliability. |
-| [`claude-code/`](claude-code/) | 1 | A configuration helper for Claude Code itself — status line, output styles, preferences, workflow customization. |
+| [`claude-code/`](claude-code/) | 2 | Configuration helpers for Claude Code itself — status line/output styles/preferences, and Skills lifecycle management. |
 
-**31 agent files across 5 packages** (`code-quality-engineer` is intentionally shipped in both `engineering/` and `security/` since it's directly relevant to both workflows — 30 agents, one deliberate duplicate).
+**36 agent files across 5 packages** (`code-quality-engineer` is intentionally shipped in both `engineering/` and `security/` since it's directly relevant to both workflows — 35 agents, one deliberate duplicate).
 
 Each package has its own `README.md`: a short "what this is for," a table of every agent with a one-sentence description of what it does and when to reach for it, and notes on anything that was considered for inclusion and left out (with the reason).
 
