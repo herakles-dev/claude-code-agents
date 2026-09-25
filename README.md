@@ -1,4 +1,4 @@
-# claude-pkg
+# claude-code-agents
 
 A curated, transferable set of Claude Code agents, organized into small installable packages by theme. This isn't an export of everything — it's a hand-picked slice of a larger working agent fleet, kept small on purpose. Quality and coherence over volume: every agent here earned its place because it's general-purpose, stands on its own, and isn't tied to one specific deployment.
 
